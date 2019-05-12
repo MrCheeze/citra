@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <thread>
 #include <utility>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
@@ -51,6 +52,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             if (GDBStub::GetCpuStepFlag()) {
                 tight_loop = false;
             } else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 return ResultStatus::Success;
             }
         }
