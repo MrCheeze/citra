@@ -55,6 +55,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
+#include "citra_qt/zelda/zelda.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -215,6 +216,10 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     if (args.length() >= 2) {
         BootGame(args[1]);
     }
+
+    zelda::ShowWindow(this);
+    ui.menu_Emulation->addAction(QStringLiteral("Open Zelda view..."),
+                                 [this] { zelda::ShowWindow(this); });
 }
 
 GMainWindow::~GMainWindow() {

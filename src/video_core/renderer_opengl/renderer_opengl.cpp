@@ -392,6 +392,7 @@ void RendererOpenGL::SwapBuffers() {
     m_current_frame++;
 
     Core::System::GetInstance().perf_stats->EndSystemFrame();
+    Core::System::GetInstance().CallFrameCallback();
 
     render_window.PollEvents();
 

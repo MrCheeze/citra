@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -308,6 +309,15 @@ public:
 
     void LoadState(u32 slot);
 
+    void CallFrameCallback() {
+        if (m_frame_callback)
+            m_frame_callback();
+    }
+
+    void SetFrameCallback(std::function<void()> callback) {
+        m_frame_callback = std::move(callback);
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -381,6 +391,8 @@ private:
     std::mutex signal_mutex;
     Signal current_signal;
     u32 signal_param;
+
+    std::function<void()> m_frame_callback;
 
     friend class boost::serialization::access;
     template <typename Archive>

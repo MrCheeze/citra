@@ -164,6 +164,11 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
+    zelda/game_allocator.cpp
+    zelda/zelda.cpp
+    zelda/zelda.h
+    zelda/search_bar.cpp
+    zelda/search_bar.h
 )
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
