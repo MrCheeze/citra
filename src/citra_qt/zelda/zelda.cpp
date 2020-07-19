@@ -1193,8 +1193,8 @@ private:
         if (m_info->player_actor) {
             const Ptr<game::Player> player = m_info->player_actor;
             m_connected_actor_info_label->setText(Format(
-                "Player: {:.3f} {:.3f} {:.3f} | grabbable_actor={:08x} attached_actor={:08x}",
-                player->pos.pos.x, player->pos.pos.y, player->pos.pos.z,
+                "Player: {:.3f} {:.3f} {:.3f} rot={:04x} | grabbable_actor={:08x} attached_actor={:08x}",
+                player->pos.pos.x, player->pos.pos.y, player->pos.pos.z, static_cast<u16>(player->pos.rot.y),
                 player->grabbable_actor.addr, player->attached_actor.addr));
         } else {
             m_connected_actor_info_label->clear();
