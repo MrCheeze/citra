@@ -1203,8 +1203,9 @@ private:
         m_target_actor_info_label->setDisabled(false);
         if (m_info->target_actor) {
             const Ptr<game::Actor> target = m_info->target_actor;
+            const int statue_location = (target->params >> 4) & 0x1F;
             m_target_actor_info_label->setText(
-                Format("Statue: {:08x} | params={:04x}", target.addr, target->params));
+                Format("Statue: {:08x} | params={:04x} (location={:02x})", target.addr, target->params, statue_location));
         } else {
             if (m_info->predicted_owl_addr != 0) {
                 m_target_actor_info_label->setText(
