@@ -113,6 +113,8 @@ public:
 
     void Free(Ptr<void> ptr);
 
+    void CopyDebugInfo();
+
     /// Only next_free_s and next_free_l should be used.
     AllocatorBlock dummy_block;
 

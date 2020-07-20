@@ -919,6 +919,7 @@ public:
         m_cursor_label = new QLabel(QStringLiteral("-"), this);
         m_pause_time_cbox = new QCheckBox(QStringLiteral("Pause time"));
         auto* dump_btn = new QPushButton(QStringLiteral("Dump heap"));
+        auto* copy_btn = new QPushButton(QStringLiteral("Copy heap"));
         auto* time_6pm_btn = new QPushButton(QStringLiteral("6PM"));
 
         m_heap_table_view = new QTableView(this);
@@ -963,6 +964,7 @@ public:
         options->addWidget(m_pause_time_cbox);
         options->addWidget(time_6pm_btn);
         options->addWidget(dump_btn);
+        options->addWidget(copy_btn);
 
         auto* layout = new QVBoxLayout(this);
         layout->addWidget(m_heap_view);
@@ -989,6 +991,13 @@ public:
 
             FileUtil::IOFile file2(path.toStdString() + ".allocator", "wb");
             file2.WriteBytes(&game::Allocator::Instance(), sizeof(game::Allocator));
+        });
+
+        connect(copy_btn, &QPushButton::pressed, this, [this] {
+            if (!Core::System::GetInstance().IsPoweredOn())
+                return;
+
+            game::Allocator::Instance().CopyDebugInfo();
         });
 
         connect(time_6pm_btn, &QPushButton::pressed, [] {
