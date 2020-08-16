@@ -289,24 +289,24 @@ void Allocator::CopyDebugInfo() {
 
     text += QString::asprintf("===== ALLOCATOR INFO =====\n");
 
-    text += QString::asprintf("Root block: %08x → %08x (%u bytes)\n", root_block.addr, root_block_end.addr,
+    text += QString::asprintf("Root block: %08x → %08x (%x bytes)\n", root_block.addr, root_block_end.addr,
             size);
     text += QString::asprintf("Small block threshold: 0x%x bytes\n", small_block_threshold);
-    text += QString::asprintf("Number of blocks: %u\n", block_count);
-    text += QString::asprintf("Average allocation size: %u bytes\n", average_alloc_size);
+    text += QString::asprintf("Number of blocks: %x\n", block_count);
+    text += QString::asprintf("Average allocation size: %x bytes\n", average_alloc_size);
     text += QString::asprintf(" \n");
 
     auto block = root_block;
     do {
         if (block->size <= 0) {
             if (block->flags & AllocatorBlock::Flag_IsRefCounted) {
-                text += QString::asprintf("%08x USED %s size=%d ref_count=%u\n", block.addr, "(reference counted)",
+                text += QString::asprintf("%08x USED %s size=%x ref_count=%x\n", block.addr, "(reference counted)",
                                           -block->size, block->ref_count);
             } else {
-                text += QString::asprintf("%08x USED %s size=%d\n", block.addr, block->name.get(), -block->size);
+                text += QString::asprintf("%08x USED %s size=%x\n", block.addr, block->name.get(), -block->size);
             }
         } else {
-            text += QString::asprintf("%08x FREE %s size=%d\n", block.addr, "(free)", block->size);
+            text += QString::asprintf("%08x FREE %s size=%x\n", block.addr, "(free)", block->size);
         }
         block = block->next;
     } while (block != root_block);
@@ -318,7 +318,7 @@ void Allocator::CopyDebugInfo() {
     size_t total_free_size = 0;
     do {
         if (block->size > 0) {
-            text += QString::asprintf("%08x-%08x FREE size=%d nextS=%08x nextL=%08x\n", block.addr, block.addr + block->size,
+            text += QString::asprintf("%08x-%08x FREE size=%x nextS=%08x nextL=%08x\n", block.addr, block.addr + block->size,
                                       block->size, block->next_free_s.addr, block->next_free_l.addr);
             total_free_size += block->size;
         }
@@ -326,7 +326,7 @@ void Allocator::CopyDebugInfo() {
     } while (block != root_block);
     text += QString::asprintf("----- FREE BLOCKS END -----\n");
 
-    text += QString::asprintf("Total free size: %zu bytes / %u bytes (%f%%)\n", total_free_size, size,
+    text += QString::asprintf("Total free size: %zx bytes / %x bytes (%f%%)\n", total_free_size, size,
                               100.0f * total_free_size / size);
     text += QString::asprintf("Root: nextS=%08x nextL=%08x\n", dummy_block.next_free_s.addr,
                               dummy_block.next_free_l.addr);
