@@ -761,6 +761,10 @@ u32 PredictOwlAddress(game::Allocator& allocator) {
     return owl.addr;
 }
 
+u32 PredictTorchAddress(game::Allocator& allocator) {
+    return 0xDEADBEEF;
+}
+
 template <typename... Args>
 QString Format(const char* format, const Args&... args) {
     return QString::fromStdString(fmt::format(format, args...));
@@ -813,11 +817,13 @@ struct ZeldaInfo {
     Blocks blocks;
     u32 total_free_size = 0;
     Ptr<game::Player> player_actor = nullptr;
-    Ptr<game::Actor> target_actor = nullptr;
+    Ptr<game::Actor> target_owl_actor = nullptr;
+    Ptr<game::Actor> target_torch_actor = nullptr;
 
     Ptr<game::Actor> player_attached_actor = nullptr;
 
     u32 predicted_owl_addr = 0;
+    u32 predicted_torch_addr = 0;
 };
 
 class InfoHolder {
@@ -939,13 +945,15 @@ public:
         heap_table_search->hide();
 
         m_connected_actor_info_label = new QLabel(this);
-        m_target_actor_info_label = new QLabel(this);
+        m_target_owl_actor_info_label = new QLabel(this);
+        m_target_torch_actor_info_label = new QLabel(this);
 
         auto* label_grid = new QGridLayout;
         label_grid->addWidget(m_heap_label, 0, 0);
         label_grid->addWidget(m_free_heap_label, 1, 0);
         label_grid->addWidget(m_connected_actor_info_label, 0, 1);
-        label_grid->addWidget(m_target_actor_info_label, 1, 1);
+        label_grid->addWidget(m_target_owl_actor_info_label, 1, 1);
+        label_grid->addWidget(m_target_torch_actor_info_label, 2, 1);
 
         // Set up layouts
 
@@ -1031,7 +1039,9 @@ public:
                 if (actor->id == game::Id::Player)
                     info->player_actor = actor.Cast<game::Player>();
                 else if (actor->id == game::Id::ObjOwlStatue)
-                    info->target_actor = actor;
+                    info->target_owl_actor = actor;
+                else if (actor->id == game::Id::Torch && actor->params & 0x0800)
+                    info->target_torch_actor = actor;
             }
 
             info->blocks.emplace_back(block, *block);
@@ -1049,6 +1059,7 @@ public:
                 game::Allocator backup = allocator;
 
                 info->predicted_owl_addr = PredictOwlAddress(allocator);
+                info->predicted_torch_addr = PredictTorchAddress(allocator);
 
                 // Restore block and allocator state.
                 for (const auto& [addr, block] : info->blocks) {
@@ -1209,18 +1220,32 @@ private:
             m_connected_actor_info_label->clear();
         }
 
-        m_target_actor_info_label->setDisabled(false);
-        if (m_info->target_actor) {
-            const Ptr<game::Actor> target = m_info->target_actor;
+        m_target_owl_actor_info_label->setDisabled(false);
+        if (m_info->target_owl_actor) {
+            const Ptr<game::Actor> target = m_info->target_owl_actor;
             const int statue_location = (target->params >> 4) & 0x1F;
-            m_target_actor_info_label->setText(
+            m_target_owl_actor_info_label->setText(
                 Format("Statue: {:08x} | params={:04x} (location={:02x})", target.addr, target->params, statue_location));
         } else {
             if (m_info->predicted_owl_addr != 0) {
-                m_target_actor_info_label->setText(
+                m_target_owl_actor_info_label->setText(
                     Format("Statue: {:08x} (predicted load address)", m_info->predicted_owl_addr));
             } else {
-                m_target_actor_info_label->setDisabled(true);
+                m_target_owl_actor_info_label->setDisabled(true);
+            }
+        }
+
+        m_target_torch_actor_info_label->setDisabled(false);
+        if (m_info->target_torch_actor) {
+            const Ptr<game::Actor> target = m_info->target_torch_actor;
+            m_target_torch_actor_info_label->setText(
+                Format("Torch: {:08x} | params={:04x}", target.addr, target->params));
+        } else {
+            if (m_info->predicted_torch_addr != 0) {
+                m_target_torch_actor_info_label->setText(
+                    Format("Torch: {:08x} (predicted load address)", m_info->predicted_torch_addr));
+            } else {
+                m_target_torch_actor_info_label->setDisabled(true);
             }
         }
     }
@@ -1266,7 +1291,8 @@ private:
     QCheckBox* m_pause_time_cbox = nullptr;
 
     QLabel* m_connected_actor_info_label = nullptr;
-    QLabel* m_target_actor_info_label = nullptr;
+    QLabel* m_target_owl_actor_info_label = nullptr;
+    QLabel* m_target_torch_actor_info_label = nullptr;
 
     u32 m_filter_range_start = 0;
     u32 m_filter_range_end = 0xFFFFFFFF;
@@ -1456,8 +1482,13 @@ void HeapViewWidget::paintEvent(QPaintEvent*) {
         painter.fillRect(addr.addr - info->heap_start, 0, std::abs(block.size), height, color);
     }
 
-    if (m_info->target_actor) {
-        painter.fillRect(m_info->target_actor.addr - info->heap_start, 0, 0xC000u, height,
+    if (m_info->target_owl_actor) {
+        painter.fillRect(m_info->target_owl_actor.addr - info->heap_start, 0, 0xC000u, height,
+                         QColor(0xff, 0xff, 0xff));
+    }
+
+    if (m_info->target_torch_actor) {
+        painter.fillRect(m_info->target_torch_actor.addr - info->heap_start, 0, 0xC000u, height,
                          QColor(0xff, 0xff, 0xff));
     }
 
@@ -1467,7 +1498,7 @@ void HeapViewWidget::paintEvent(QPaintEvent*) {
             painter.fillRect(attached_actor.addr - info->heap_start, 0, 0xC000u, height,
                              QColor(0xff, 0xf2, 0x36));
         }
-        if (attached_actor.addr - 0x10 == m_info->target_actor.addr) {
+        if (attached_actor.addr - 0x10 == m_info->target_owl_actor.addr || attached_actor.addr == m_info->target_torch_actor.addr) {
             painter.fillRect(attached_actor.addr - info->heap_start, 0, 0xC000u, height,
                              QColor(0x0D, 0x9A, 0xff));
         }
