@@ -12,6 +12,8 @@ enum class Id : u16 {
     Player = 0,
     // Bomb
     Bomb = 0x9,
+    // Item00
+    Item00 = 0xe,
     // Arrow
     Arrow = 0xf,
     // Elegy of Emptiness statue
@@ -248,5 +250,12 @@ struct DynaPolyActor : Actor {
     u32 dyna_poly_flags;
 };
 static_assert(sizeof(DynaPolyActor) == 0x20C);
+
+struct Torch : Actor {
+    char field_1F8[0xD4];
+    Ptr<void> field_2CC;
+    char field_2D0[4];
+};
+static_assert(sizeof(Torch) == 0x2D4);
 
 } // namespace zelda::game

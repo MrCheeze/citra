@@ -762,7 +762,30 @@ u32 PredictOwlAddress(game::Allocator& allocator) {
 }
 
 u32 PredictTorchAddress(game::Allocator& allocator) {
-    return 0xDEADBEEF;
+    // On the night of the 2nd day in laundry pool, the ->field_17C of the unlit torch and three rupees deallocates, and then a lit torch allocates.
+    // This function predicts where the lit torch will allocate, unless it ends up where a ->field_17C allocation used to be.
+
+    auto lit_torch = allocator.Alloc(0x2D4, nullptr);
+    u32 lit_torch_addr = lit_torch.addr;
+    allocator.Free(lit_torch);
+
+    const Ptr<game::AllocatorBlock> root_block = allocator.root_block;
+    Ptr<game::AllocatorBlock> block = root_block;
+    do {
+        Ptr<game::Actor> actor = GetActorFromBlock(block);
+        if (actor) {
+            if (actor->id == game::Id::Item00 || actor->id == game::Id::Torch) {
+                if (actor->field_17C.addr > lit_torch_addr) {
+                    lit_torch_addr = 0xBAD;
+                    break;
+                }
+            }
+        }
+
+        block = block->next;
+    } while (block != root_block);
+
+    return lit_torch_addr;
 }
 
 template <typename... Args>
@@ -1059,6 +1082,13 @@ public:
                 game::Allocator backup = allocator;
 
                 info->predicted_owl_addr = PredictOwlAddress(allocator);
+
+                // Restore block and allocator state.
+                for (const auto& [addr, block] : info->blocks) {
+                    std::memcpy(addr.get(), &block, sizeof(block));
+                }
+                allocator = backup;
+
                 info->predicted_torch_addr = PredictTorchAddress(allocator);
 
                 // Restore block and allocator state.
