@@ -946,6 +946,7 @@ public:
         m_range_start_ledit = new QLineEdit;
         m_range_end_ledit = new QLineEdit;
         m_cursor_label = new QLabel(QStringLiteral("-"), this);
+        m_freeze_scrubs_cbox = new QCheckBox(QStringLiteral("Freeze scrubs"));
         m_pause_time_cbox = new QCheckBox(QStringLiteral("Pause time"));
         auto* dump_btn = new QPushButton(QStringLiteral("Dump heap"));
         auto* copy_btn = new QPushButton(QStringLiteral("Copy heap"));
@@ -992,6 +993,7 @@ public:
         options->addWidget(m_range_end_ledit);
         options->addStretch();
         options->addWidget(m_cursor_label);
+        options->addWidget(m_freeze_scrubs_cbox);
         options->addWidget(m_pause_time_cbox);
         options->addWidget(time_6pm_btn);
         options->addWidget(dump_btn);
@@ -1065,6 +1067,8 @@ public:
                     info->target_owl_actor = actor;
                 else if (actor->id == game::Id::Torch && actor->params & 0x0800)
                     info->target_torch_actor = actor;
+                else if (actor->id == game::Id::MadScrub && m_freeze_scrubs_cbox->isChecked())
+                    actor.Cast<game::MadScrub>()->field_6A0 = 0x02;
             }
 
             info->blocks.emplace_back(block, *block);
@@ -1318,6 +1322,7 @@ private:
     QLineEdit* m_range_start_ledit = nullptr;
     QLineEdit* m_range_end_ledit = nullptr;
     QLabel* m_cursor_label = nullptr;
+    QCheckBox* m_freeze_scrubs_cbox = nullptr;
     QCheckBox* m_pause_time_cbox = nullptr;
 
     QLabel* m_connected_actor_info_label = nullptr;

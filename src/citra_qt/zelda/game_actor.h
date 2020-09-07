@@ -20,6 +20,8 @@ enum class Id : u16 {
     ObjElegyStatue = 0x1F,
     // Torch
     Torch = 0x2E,
+    // Mad Scrub
+    MadScrub = 0x30,
     // Pot
     Pot = 0x5C,
     // Clear Tag (?)
@@ -257,5 +259,12 @@ struct Torch : Actor {
     char field_2D0[4];
 };
 static_assert(sizeof(Torch) == 0x2D4);
+
+struct MadScrub : Actor {
+    char field_1F8[0x4A8];
+    char field_6A0;
+    char field_6A1[0xCB];
+};
+static_assert(sizeof(MadScrub) == 0x76C);
 
 } // namespace zelda::game
