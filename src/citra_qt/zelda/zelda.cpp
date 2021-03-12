@@ -662,101 +662,149 @@ u32 PredictOwlAddress(game::Allocator& allocator) {
     auto x = alloc(0x9C);
     allocator.Free(x);
     alloc(0x4C);
+
     alloc(0x204);
     alloc(0x59C);
+
     alloc(0x204);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x8B4);
     alloc(0x59C);
+
     alloc(0x8B4);
     alloc(0x59C);
+
     alloc(0x230);
     alloc(0x59C);
+
     alloc(0x230);
     alloc(0x59C);
+
     alloc(0x230);
     alloc(0x59C);
+
     alloc(0x714);
     alloc(0x59C);
+
     alloc(0x714);
     alloc(0x59C);
+
     alloc(0x714);
     alloc(0x59C);
+
     alloc(0x4C8);
     alloc(0x59C);
+
     alloc(0x2E4);
     alloc(0x59C);
+
     alloc(0x2E4);
     alloc(0x59C);
+
     alloc(0x2E4);
     alloc(0x59C);
+
     alloc(0x2E4);
     alloc(0x59C);
+
     alloc(0x2E4);
     alloc(0x59C);
+
     alloc(0x258);
     alloc(0x59C);
+
     alloc(0x258);
     alloc(0x59C);
+
     alloc(0x258);
     alloc(0x59C);
+
     alloc(0x258);
     alloc(0x59C);
+
     alloc(0x218);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0x220);
     alloc(0x59C);
+
     alloc(0xE58);
     alloc(0x59C);
+
     alloc(0x2D0);
     alloc(0x59C);
+
     alloc(0x2D0);
     alloc(0x59C);
+
     alloc(0x200);
     alloc(0x59C);
+
     alloc(0xBD4);
     alloc(0x59C);
+
     alloc(0x20C);
     alloc(0x59C);
+
     alloc(0x300);
     alloc(0x59C);
+
     alloc(0x2C);
     alloc(0x204);
     alloc(0x2C);
+
     auto owl = alloc(0x290);
     alloc(0x59C);
+
     alloc(0x260);
     alloc(0x59C);
+
 
     return owl.addr;
 }
@@ -842,6 +890,7 @@ struct ZeldaInfo {
     Ptr<game::Player> player_actor = nullptr;
     Ptr<game::Actor> target_owl_actor = nullptr;
     Ptr<game::Actor> target_torch_actor = nullptr;
+    Ptr<game::Actor> target_scrub_actor = nullptr;
 
     Ptr<game::Actor> player_attached_actor = nullptr;
 
@@ -930,6 +979,7 @@ public:
 
         m_heap_label = new QLabel(QStringLiteral("-"), this);
         m_free_heap_label = new QLabel(QStringLiteral("-"), this);
+        m_dummy_block_label = new QLabel(QStringLiteral("-"), this);
 
         m_heap_table_model = new HeapTableModel(this);
         m_heap_table_proxy_model = new HeapTableFilterModel(this);
@@ -971,13 +1021,16 @@ public:
         m_connected_actor_info_label = new QLabel(this);
         m_target_owl_actor_info_label = new QLabel(this);
         m_target_torch_actor_info_label = new QLabel(this);
+        m_target_scrub_actor_info_label = new QLabel(this);
 
         auto* label_grid = new QGridLayout;
         label_grid->addWidget(m_heap_label, 0, 0);
         label_grid->addWidget(m_free_heap_label, 1, 0);
+        label_grid->addWidget(m_dummy_block_label, 2, 0);
         label_grid->addWidget(m_connected_actor_info_label, 0, 1);
         label_grid->addWidget(m_target_owl_actor_info_label, 1, 1);
         label_grid->addWidget(m_target_torch_actor_info_label, 2, 1);
+        label_grid->addWidget(m_target_scrub_actor_info_label, 3, 1);
 
         // Set up layouts
 
@@ -1067,6 +1120,8 @@ public:
                     info->target_owl_actor = actor;
                 else if (actor->id == game::Id::Torch && actor->params & 0x0800)
                     info->target_torch_actor = actor;
+                else if (actor->id == game::Id::DekuGuard_G)
+                    info->target_scrub_actor = actor;
                 else if (actor->id == game::Id::MadScrub && m_freeze_scrubs_cbox->isChecked())
                     actor.Cast<game::MadScrub>()->field_6A0 = 0x02;
             }
@@ -1242,6 +1297,10 @@ private:
                                           m_info->total_free_size, allocator.size,
                                           100.0f * m_info->total_free_size / allocator.size));
 
+        m_dummy_block_label->setText(Format("Root: nextS=0x{:08x} nextL=0x{:08x}",
+                                          allocator.dummy_block.next_free_s.addr,
+                                          allocator.dummy_block.next_free_l.addr));
+
         m_heap_view->update();
 
         if (m_info->player_actor) {
@@ -1282,6 +1341,15 @@ private:
                 m_target_torch_actor_info_label->setDisabled(true);
             }
         }
+
+        m_target_scrub_actor_info_label->setDisabled(false);
+        if (m_info->target_scrub_actor) {
+            const Ptr<game::Actor> target = m_info->target_scrub_actor;
+            m_target_scrub_actor_info_label->setText(
+                Format("Last Deku Guard: {:08x} | warp var={:04x}", target.addr, target.Cast<game::DekuGuard_G>()->field_83A));
+        } else {
+            m_target_scrub_actor_info_label->setDisabled(true);
+        }
     }
 
     void OnHeapTableSelectionChanged(const QItemSelection& selected,
@@ -1312,6 +1380,7 @@ private:
     HeapViewWidget* m_heap_view = nullptr;
     QLabel* m_heap_label = nullptr;
     QLabel* m_free_heap_label = nullptr;
+    QLabel* m_dummy_block_label = nullptr;
 
     QCheckBox* m_keep_selection_cbox = nullptr;
     QCheckBox* m_show_actors_cbox = nullptr;
@@ -1328,6 +1397,7 @@ private:
     QLabel* m_connected_actor_info_label = nullptr;
     QLabel* m_target_owl_actor_info_label = nullptr;
     QLabel* m_target_torch_actor_info_label = nullptr;
+    QLabel* m_target_scrub_actor_info_label = nullptr;
 
     u32 m_filter_range_start = 0;
     u32 m_filter_range_end = 0xFFFFFFFF;

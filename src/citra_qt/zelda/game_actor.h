@@ -267,4 +267,10 @@ struct MadScrub : Actor {
 };
 static_assert(sizeof(MadScrub) == 0x76C);
 
+struct DekuGuard_G : Actor {
+    char field_1F8[0x642];
+    u16 field_83A;
+    // ... and more fields ...
+};
+
 } // namespace zelda::game
