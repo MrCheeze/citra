@@ -1344,9 +1344,9 @@ private:
 
         m_target_scrub_actor_info_label->setDisabled(false);
         if (m_info->target_scrub_actor) {
-            const Ptr<game::Actor> target = m_info->target_scrub_actor;
+            const Ptr<game::DekuGuard_G> target = m_info->target_scrub_actor.Cast<game::DekuGuard_G>();
             m_target_scrub_actor_info_label->setText(
-                Format("Last Deku Guard: {:08x} | warp var={:04x}", target.addr, target.Cast<game::DekuGuard_G>()->field_83A));
+                Format("Last Deku Guard: {:08x} | unk824={:08x} unk834={:08x} {:08x} {:08x}", target.addr, target->field_824, target->field_834, target->field_838, target->field_83C));
         } else {
             m_target_scrub_actor_info_label->setDisabled(true);
         }

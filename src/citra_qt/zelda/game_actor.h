@@ -268,8 +268,14 @@ struct MadScrub : Actor {
 static_assert(sizeof(MadScrub) == 0x76C);
 
 struct DekuGuard_G : Actor {
-    char field_1F8[0x642];
-    u16 field_83A;
+    char field_1F8[0x62C];
+    u32 field_824;
+    u32 field_828;
+    u32 field_82C;
+    u32 field_830;
+    u32 field_834;
+    u32 field_838;
+    u32 field_83C;
     // ... and more fields ...
 };
 
